@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import './DashboardPage.css'
+
 
 const DashboardPage = () => {
     const { user, logout } = useAuth()
