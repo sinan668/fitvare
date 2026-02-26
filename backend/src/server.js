@@ -24,7 +24,7 @@ app.use(cookieParser());
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.get('/', (req, res) => {
-    res.json({ message: '🚀 Auth API is running', status: 'OK' });
+    res.json({ message: '🚀 Fitvera Auth API is running', status: 'OK' });
 });
 
 app.use('/api/auth', authRoutes);
