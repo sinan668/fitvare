@@ -5,6 +5,7 @@ import DashboardPage from './pages/DashboardPage'
 import ProfilePage from './pages/ProfilePage/ProfilePage.jsx'
 import HomePage from './pages/HomePage/HomePage.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
+import OAuthSuccess from './pages/Authentication/OAuthSuccess.jsx'
 
 function App() {
     const { user } = useAuth()
@@ -30,6 +31,7 @@ function App() {
                     </ProtectedRoute>
                 }
             />
+            <Route path="/oauth-success" element={<OAuthSuccess />} />
         </Routes>
     )
 }
