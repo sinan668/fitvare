@@ -30,6 +30,7 @@ const sendTokenResponse = (user, statusCode, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                gender: user.gender,
             },
         });
 };
@@ -39,13 +40,20 @@ const sendTokenResponse = (user, statusCode, res) => {
 // @access  Public
 const register = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password, role, gender } = req.body;
 
         // Basic validation
         if (!name || !email || !password) {
             return res.status(400).json({
                 success: false,
                 message: 'Please provide name, email, and password',
+            });
+        }
+
+        if (!gender || !['male', 'female', 'other'].includes(gender)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please select a valid gender (male, female, or other)',
             });
         }
 
@@ -59,11 +67,20 @@ const register = async (req, res) => {
         }
 
         // Create user
-        const user = await User.create({ name, email, password, role: role || 'client' });
+        const user = await User.create({ name, email, password, gender, role: role || 'client' });
 
         sendTokenResponse(user, 201, res);
     } catch (error) {
         console.error('Register error:', error);
+
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map(val => val.message);
+            return res.status(400).json({
+                success: false,
+                message: messages.join(', ')
+            });
+        }
+
         res.status(500).json({
             success: false,
             message: 'Server error during registration',

@@ -28,6 +28,15 @@ const userSchema = new mongoose.Schema(
             enum: ['client', 'admin', 'trainer'],
             default: 'client',
         },
+        gender: {
+            type: String,
+            enum: ['male', 'female', 'other'],
+            required: [true, 'Gender is required'],
+        },
+        googleId: {
+            type: String,
+            default: null,
+        },
     },
     { timestamps: true }
 );
