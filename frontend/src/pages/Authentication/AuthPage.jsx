@@ -17,13 +17,14 @@ const AuthPage = () => {
         name: '',
         email: '',
         password: '',
+        gender: '',
         rememberMe: false
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPwd, setShowPwd] = useState(false);
 
-    const from = location.state?.from?.pathname || '/dashboard';
+    const from = location.state?.from?.pathname || '/profile';
 
     useEffect(() => {
         setIsLogin(location.pathname === '/login');
@@ -41,6 +42,12 @@ const AuthPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+
+        if (!isLogin && !form.gender) {
+            setError('Please select your gender to continue.');
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -51,6 +58,7 @@ const AuthPage = () => {
                     name: form.name,
                     email: form.email,
                     password: form.password,
+                    gender: form.gender,
                     role: 'client'
                 });
             }
@@ -136,6 +144,26 @@ const AuthPage = () => {
                                             onChange={handleChange}
                                             className="w-full bg-[#03110b]/50 border border-white/5 rounded-2xl pl-12 pr-6 py-4 outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-all text-sm font-bold text-white placeholder:text-emerald-100/10"
                                         />
+                                    </div>
+
+                                    {/* Gender Selector */}
+                                    <div className="space-y-2 pt-1">
+                                        <label className="text-[10px] uppercase font-black tracking-widest text-emerald-100/50 ml-1">Gender</label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {['male', 'female', 'other'].map((g) => (
+                                                <button
+                                                    key={g}
+                                                    type="button"
+                                                    onClick={() => setForm(prev => ({ ...prev, gender: g }))}
+                                                    className={`py-3 rounded-2xl text-xs font-black uppercase tracking-widest border transition-all duration-200 ${form.gender === g
+                                                        ? 'bg-emerald-500 border-emerald-500 text-[#03110b] shadow-lg shadow-emerald-500/20'
+                                                        : 'bg-[#03110b]/50 border-white/5 text-emerald-100/50 hover:border-emerald-500/30 hover:text-emerald-100/80'
+                                                        }`}
+                                                >
+                                                    {g === 'male' ? '♂ Male' : g === 'female' ? '♀ Female' : '⊕ Other'}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </motion.div>
                             )}

@@ -39,7 +39,7 @@ const Navbar = () => {
 
                 <div className="flex items-center gap-4">
                     {user ? (
-                        <Link to="/profile" className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10  rounded-full transition-all group">
+                        <Link to={user.role === 'trainer' ? '/trainer-profile' : '/profile'} className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10  rounded-full transition-all group">
                             <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-[#03110b] font-black text-xs uppercase">
                                 {user.name?.[0] || 'U'}
                             </div>

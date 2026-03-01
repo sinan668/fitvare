@@ -244,9 +244,12 @@ const HomePage = () => {
                                         {trainer.specialization}
                                     </span>
                                 </div>
-                                <button className="w-full bg-[#03110b] hover:bg-emerald-500 text-white hover:text-[#03110b] border border-white/5 hover:border-emerald-500 font-black text-xs uppercase tracking-widest py-4 rounded-2xl transition-all shadow-lg hover:shadow-emerald-500/20 transform active:scale-95">
+                                <Link
+                                    to={`/book/${trainer.id}`}
+                                    className="w-full inline-flex justify-center items-center bg-[#03110b] hover:bg-emerald-500 text-white hover:text-[#03110b] border border-white/5 hover:border-emerald-500 font-black text-xs uppercase tracking-widest py-4 rounded-2xl transition-all shadow-lg hover:shadow-emerald-500/20 transform active:scale-95"
+                                >
                                     Book Now
-                                </button>
+                                </Link>
                             </div>
                         </motion.div>
                     ))}
