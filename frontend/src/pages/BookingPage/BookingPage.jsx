@@ -1,23 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 import Navbar from '../../components/Navbar/Navbar';
 
 const BookingPage = () => {
     const { trainerId } = useParams();
     const navigate = useNavigate();
 
-    // Mock trainer data based on ID (In a real app, fetch from API)
-    const [trainer, setTrainer] = useState({
-        id: trainerId || "1",
-        name: "Alex Johnson",
-        specialization: "Weight Loss & Conditioning",
-        experience: 5,
-        rating: 4.9,
-        rate: 50,
-        image: "https://images.unsplash.com/photo-1540206276207-3af25c08abbb?auto=format&fit=crop&q=80&w=400&h=400",
-        reviews: 124
-    });
+    const [trainer, setTrainer] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [existingBookings, setExistingBookings] = useState([]);
 
     // Form State
     const [date, setDate] = useState("");
@@ -29,6 +22,41 @@ const BookingPage = () => {
     // Booking State
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [trainerRes, bookingsRes] = await Promise.all([
+                    axios.get(`/api/trainers/${trainerId}`),
+                    axios.get(`/api/bookings/trainer/${trainerId}`)
+                ]);
+
+                if (trainerRes.data.success) {
+                    setTrainer({
+                        ...trainerRes.data.data,
+                        name: trainerRes.data.data.user.name,
+                        image: trainerRes.data.data.profileImage || "https://images.unsplash.com/photo-1540206276207-3af25c08abbb?auto=format&fit=crop&q=80&w=400&h=400",
+                        rate: 50, // Default rate if not in model
+                        reviews: 124, // Mock
+                        rating: 4.9 // Mock
+                    });
+                }
+
+                if (bookingsRes.data.success) {
+                    setExistingBookings(bookingsRes.data.data);
+                }
+            } catch (error) {
+                console.error('Error fetching booking data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (trainerId) {
+            fetchData();
+        }
+    }, [trainerId]);
 
     // Dynamic Pricing Calculation
     const getDurationMultiplier = (durationStr) => {
@@ -37,24 +65,76 @@ const BookingPage = () => {
         return 1; // 1 Hour
     };
 
-    const totalPrice = trainer.rate * getDurationMultiplier(duration);
+    const totalPrice = trainer ? trainer.rate * getDurationMultiplier(duration) : 0;
 
-    // Available Time Slots Mock
-    const timeSlots = ["9:00 AM", "10:00 AM", "11:30 AM", "2:00 PM", "4:00 PM", "5:30 PM"];
+    // Available Time Slots Mock (In a real app, generate based on trainer availability)
+    const timeSlots = ["09:00 AM", "10:00 AM", "11:30 AM", "02:00 PM", "04:00 PM", "05:30 PM"];
 
-    const handleConfirmBooking = () => {
+    const isSlotTaken = (t) => {
+        if (!date) return false;
+        return existingBookings.some(b => {
+            const bDate = new Date(b.date).toISOString().split('T')[0];
+            return bDate === date && b.time === t;
+        });
+    };
+
+    const handleConfirmBooking = async () => {
         if (!date || !time) {
             alert("Please select a date and time to continue.");
             return;
         }
 
         setIsSubmitting(true);
-        // Simulate API call
-        setTimeout(() => {
+        setErrorMessage("");
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.post('/api/bookings', {
+                trainerId,
+                date,
+                time,
+                duration,
+                sessionType,
+                notes,
+                totalPrice
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.data.success) {
+                setIsSuccess(true);
+            }
+        } catch (error) {
+            console.error('Booking error:', error);
+            const msg = error.response?.data?.message || "Something went default. Please try again.";
+
+            if (msg === 'there is no availabilty') {
+                alert('there is no availabilty');
+            } else {
+                setErrorMessage(msg);
+                alert(msg);
+            }
+        } finally {
             setIsSubmitting(false);
-            setIsSuccess(true);
-        }, 1500);
+        }
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
+            </div>
+        );
+    }
+
+    if (!trainer) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+                <h1 className="text-2xl font-black text-slate-800 mb-4">Trainer not found</h1>
+                <button onClick={() => navigate(-1)} className="text-emerald-500 font-bold hover:underline">Go Back</button>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans selection:bg-emerald-400 selection:text-white">
@@ -166,18 +246,24 @@ const BookingPage = () => {
                                                     Available Time
                                                 </label>
                                                 <div className="grid grid-cols-3 gap-2">
-                                                    {timeSlots.map(t => (
-                                                        <button
-                                                            key={t}
-                                                            onClick={() => setTime(t)}
-                                                            className={`py-3 rounded-xl text-xs font-black tracking-wide transition-all ${time === t
+                                                    {timeSlots.map(t => {
+                                                        const taken = isSlotTaken(t);
+                                                        return (
+                                                            <button
+                                                                key={t}
+                                                                disabled={taken}
+                                                                onClick={() => setTime(t)}
+                                                                className={`py-3 rounded-xl text-xs font-black tracking-wide transition-all ${time === t
                                                                     ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
-                                                                    : 'bg-slate-50 text-slate-600 border border-slate-200 hover:border-emerald-500/50 hover:bg-emerald-50'
-                                                                }`}
-                                                        >
-                                                            {t}
-                                                        </button>
-                                                    ))}
+                                                                    : taken
+                                                                        ? 'bg-slate-100 text-slate-300 cursor-not-allowed border border-slate-100'
+                                                                        : 'bg-slate-50 text-slate-600 border border-slate-200 hover:border-emerald-500/50 hover:bg-emerald-50'
+                                                                    }`}
+                                                            >
+                                                                {taken ? 'Booked' : t}
+                                                            </button>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         </div>
@@ -237,8 +323,8 @@ const BookingPage = () => {
                                                 onClick={handleConfirmBooking}
                                                 disabled={isSubmitting}
                                                 className={`w-full py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all transform shadow-xl flex justify-center items-center gap-2 ${isSubmitting
-                                                        ? 'bg-emerald-400 cursor-not-allowed text-white shadow-emerald-500/20'
-                                                        : 'bg-emerald-500 hover:bg-emerald-400 hover:-translate-y-1 text-white shadow-emerald-500/30'
+                                                    ? 'bg-emerald-400 cursor-not-allowed text-white shadow-emerald-500/20'
+                                                    : 'bg-emerald-500 hover:bg-emerald-400 hover:-translate-y-1 text-white shadow-emerald-500/30'
                                                     }`}
                                             >
                                                 {isSubmitting ? (

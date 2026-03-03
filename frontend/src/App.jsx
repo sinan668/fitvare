@@ -3,7 +3,6 @@ import { useAuth } from './context/AuthContext.jsx'
 import AuthPage from './pages/Authentication/AuthPage.jsx'
 import DashboardPage from './pages/DashboardPage'
 import ProfilePage from './pages/ProfilePage/ProfilePage.jsx'
-import TrainerProfilePage from './pages/TrainerProfilePage/TrainerProfilePage.jsx'
 import HomePage from './pages/HomePage/HomePage.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import OAuthSuccess from './pages/Authentication/OAuthSuccess.jsx'
@@ -35,11 +34,7 @@ function App() {
             />
             <Route
                 path="/trainer-profile"
-                element={
-                    <ProtectedRoute>
-                        <TrainerProfilePage />
-                    </ProtectedRoute>
-                }
+                element={<Navigate to="/profile" />}
             />
             <Route path="/oauth-success" element={<OAuthSuccess />} />
             <Route path="/book/:trainerId" element={<BookingPage />} />

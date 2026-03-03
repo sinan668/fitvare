@@ -2,15 +2,59 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 import { useAuth } from '../../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import Navbar from '../../components/Navbar/Navbar'
 
+const mockBookings = [
+    {
+        id: 1,
+        clientName: 'Michael Scott',
+        date: 'Today',
+        time: '5:00 PM',
+        type: 'Weight Loss Session',
+        status: 'confirmed'
+    },
+    {
+        id: 2,
+        clientName: 'Jim Halpert',
+        date: 'Today',
+        time: '7:30 PM',
+        type: 'Strength Training',
+        status: 'pending'
+    }
+]
+
 const TrainerProfilePage = () => {
-    const { user } = useAuth()
+    const { user, logout } = useAuth()
+    const navigate = useNavigate()
     const [loading, setLoading] = useState(true)
     const [trainer, setTrainer] = useState(null)
     const [isPublicView, setIsPublicView] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
     const [editForm, setEditForm] = useState(null)
+
+    // Add Specializations checklist for Edit menu
+    const SPECIALIZATIONS = [
+        'Weight Loss', 'Muscle Gain', 'Yoga & Pilates', 'CrossFit',
+        'Strength Training', 'HIIT', 'Cardio & Endurance', 'Nutrition Coaching',
+        'Rehabilitation', 'Bodybuilding',
+    ]
+
+    const toggleSpec = (spec) => {
+        setEditForm(prev => {
+            const specs = prev.specializations || []
+            if (specs.includes(spec)) {
+                return { ...prev, specializations: specs.filter(s => s !== spec) }
+            } else {
+                return { ...prev, specializations: [...specs, spec] }
+            }
+        })
+    }
+
+    const handleLogout = () => {
+        logout()
+        navigate('/')
+    }
 
     useEffect(() => {
         const fetchTrainerProfile = async () => {
@@ -175,6 +219,16 @@ const TrainerProfilePage = () => {
                         <span className="text-emerald-500 font-black text-[10px] uppercase tracking-widest mb-1 block">Dashboard</span>
                         <h1 className="text-3xl font-black tracking-tight text-white">Trainer Profile</h1>
                     </div>
+
+                    <button
+                        onClick={handleLogout}
+                        className="bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 text-white/70 hover:text-red-400 px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center gap-2"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Logout
+                    </button>
                 </div>
 
                 {/* ── Top Profile Section ──────────────────────────────── */}
@@ -239,6 +293,57 @@ const TrainerProfilePage = () => {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </motion.section>
+
+                {/* ── My Bookings Section ───────────────────────────────────── */}
+                <motion.section
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.05 }}
+                    className="mb-8"
+                >
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <span className="text-emerald-500 font-black text-[10px] uppercase tracking-widest mb-1 block">Schedule</span>
+                            <h2 className="text-2xl font-black tracking-tight">Today's Bookings</h2>
+                        </div>
+                        <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-black">
+                            {mockBookings.length} Sessions
+                        </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {mockBookings.map((booking, index) => (
+                            <motion.div
+                                key={booking.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 + index * 0.1 }}
+                                className="group bg-[#051c13]/70 backdrop-blur-xl border border-white/5 rounded-[1.75rem] p-5 hover:border-emerald-500/30 transition-all"
+                            >
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 className="font-black text-sm text-white">{booking.clientName}</h3>
+                                        <p className="text-[11px] text-emerald-100/50 font-bold mt-0.5">{booking.type}</p>
+                                    </div>
+                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${booking.status === 'confirmed' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'}`}>
+                                        {booking.status}
+                                    </span>
+                                </div>
+
+                                <div className="border-t border-white/5 mb-4" />
+
+                                <div className="flex items-center gap-4 text-xs text-emerald-100/60 font-bold">
+                                    <span className="flex items-center gap-1.5"><span className="text-emerald-500">🗓️</span> {booking.date}</span>
+                                    <span className="flex items-center gap-1.5"><span className="text-emerald-500">🕐</span> {booking.time}</span>
+                                </div>
+
+                                <button className="mt-4 w-full bg-white/5 hover:bg-emerald-500/10 border border-white/5 hover:border-emerald-500/30 text-white/70 hover:text-emerald-400 text-[11px] font-black uppercase tracking-widest py-2.5 rounded-xl transition-all">
+                                    View Details
+                                </button>
+                            </motion.div>
+                        ))}
                     </div>
                 </motion.section>
 
@@ -391,6 +496,25 @@ const TrainerProfilePage = () => {
                                         onChange={e => setEditForm({ ...editForm, bio: e.target.value })}
                                         className="w-full bg-[#03110b]/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500/50 resize-none"
                                     />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Specializations</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {SPECIALIZATIONS.map(spec => (
+                                            <button
+                                                key={spec}
+                                                type="button"
+                                                onClick={() => toggleSpec(spec)}
+                                                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-colors ${editForm.specializations?.includes(spec)
+                                                        ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
+                                                        : 'bg-white/5 border-white/10 text-white/50 hover:border-emerald-500/30'
+                                                    }`}
+                                            >
+                                                {spec}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <div className="flex gap-4 pt-4">

@@ -1,21 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 import Navbar from '../../components/Navbar/Navbar';
 
 const HomePage = () => {
     const [scrolled, setScrolled] = useState(false);
     const [priceRange, setPriceRange] = useState(50);
+    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const handleScroll = () => {
-            setScrolled(window.scrollY > 50);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
-    const trainers = [
+    const dummyTrainers = [
         {
             id: 1,
             name: "Alex Johnson",
@@ -53,6 +47,43 @@ const HomePage = () => {
             image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=400&h=400"
         }
     ];
+
+    const [trainers, setTrainers] = useState(dummyTrainers);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 50);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    useEffect(() => {
+        const fetchTrainers = async () => {
+            try {
+                const res = await axios.get('/api/trainers');
+                if (res.data.success && res.data.data.length > 0) {
+                    const formattedTrainers = res.data.data.map((t, index) => ({
+                        id: t._id,
+                        name: t.user?.name || `Trainer ${index + 1}`,
+                        location: t.location || 'Unknown',
+                        specialization: t.specializations?.[0] || 'General Fitness',
+                        rating: (5.0 - Math.random() * 0.5).toFixed(1), // Mock rating between 4.5 and 5.0
+                        price: 50 + Math.floor(Math.random() * 50),     // Mock price between 50 and 100
+                        image: t.profileImage || dummyTrainers[index % dummyTrainers.length].image
+                    }));
+                    setTrainers(formattedTrainers.slice(0, 4));
+                }
+            } catch (error) {
+                console.error("Error fetching featured trainers:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTrainers();
+    }, []);
+
+
 
     return (
         <div className="min-h-screen bg-[#03110b] text-white selection:bg-emerald-400 selection:text-[#03110b] font-sans overflow-x-hidden">
