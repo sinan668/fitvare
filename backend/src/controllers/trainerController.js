@@ -5,9 +5,9 @@ const jwt = require('jsonwebtoken');
 
 exports.applyForTrainer = async (req, res) => {
     try {
-        const { experience, bio, specializations, profileImage } = req.body;
+        const { experience, bio, specializations, profileImage, location } = req.body;
 
-        if (!experience || !bio || !specializations || specializations.length === 0) {
+        if (!experience || !bio || !specializations || !location || specializations.length === 0) {
             return res.status(400).json({ success: false, message: 'Please provide all required fields.' });
         }
 
@@ -27,6 +27,7 @@ exports.applyForTrainer = async (req, res) => {
             bio,
             specializations,
             profileImage,
+            location,
         });
 
         // Upgrade user role to trainer
@@ -43,7 +44,13 @@ exports.applyForTrainer = async (req, res) => {
         res.status(201).json({
             success: true,
             data: trainerProfile,
-            user: updatedUser,
+            user: {
+                id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                role: updatedUser.role,
+                gender: updatedUser.gender,
+            },
             token,
             message: 'Successfully applied and upgraded to Trainer!',
         });
@@ -67,6 +74,67 @@ exports.getTrainerProfile = async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching trainer profile:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+exports.getAllTrainers = async (req, res) => {
+    try {
+        const trainers = await TrainerProfile.find().populate('user', 'name email gender');
+
+        res.status(200).json({
+            success: true,
+            count: trainers.length,
+            data: trainers,
+        });
+    } catch (error) {
+        console.error('Error fetching all trainers:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+exports.updateAvailability = async (req, res) => {
+    try {
+        const { availability } = req.body;
+
+        if (!availability) {
+            return res.status(400).json({ success: false, message: 'Please provide availability data.' });
+        }
+
+        const trainerProfile = await TrainerProfile.findOneAndUpdate(
+            { user: req.user.id },
+            { availability },
+            { new: true, runValidators: true }
+        );
+
+        if (!trainerProfile) {
+            return res.status(404).json({ success: false, message: 'Trainer profile not found.' });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: trainerProfile,
+            message: 'Availability updated successfully!'
+        });
+    } catch (error) {
+        console.error('Error updating availability:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+exports.getTrainerById = async (req, res) => {
+    try {
+        const trainer = await TrainerProfile.findOne({ user: req.params.id }).populate('user', 'name email gender');
+
+        if (!trainer) {
+            return res.status(404).json({ success: false, message: 'Trainer not found.' });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: trainer
+        });
+    } catch (error) {
+        console.error('Error fetching trainer by ID:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };

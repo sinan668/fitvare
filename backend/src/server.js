@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const trainerRoutes = require('./routes/trainerRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
 const errorHandler = require('./utils/errorHandler');
 // Connect to MongoDB
 connectDB();
@@ -39,6 +40,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/trainers', trainerRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 // ─── 404 Handler ──────────────────────────────────────────────────────────────
 app.use((req, res) => {

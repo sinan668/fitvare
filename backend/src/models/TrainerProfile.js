@@ -32,6 +32,30 @@ const trainerProfileSchema = new mongoose.Schema(
         profileImage: {
             type: String,
         },
+        location: {
+            type: String,
+            required: [true, 'Location is required'],
+            trim: true,
+        },
+        availability: {
+            type: Map,
+            of: {
+                isOpen: { type: Boolean, default: false },
+                workingHours: {
+                    start: { type: String, default: '09:00' },
+                    end: { type: String, default: '17:00' }
+                }
+            },
+            default: {
+                'Monday': { isOpen: true, workingHours: { start: '09:00', end: '17:00' } },
+                'Tuesday': { isOpen: true, workingHours: { start: '09:00', end: '17:00' } },
+                'Wednesday': { isOpen: true, workingHours: { start: '09:00', end: '17:00' } },
+                'Thursday': { isOpen: true, workingHours: { start: '09:00', end: '17:00' } },
+                'Friday': { isOpen: true, workingHours: { start: '09:00', end: '17:00' } },
+                'Saturday': { isOpen: false, workingHours: { start: '10:00', end: '14:00' } },
+                'Sunday': { isOpen: false, workingHours: { start: '10:00', end: '14:00' } }
+            }
+        }
     },
     { timestamps: true }
 );
